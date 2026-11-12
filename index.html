@@ -45,7 +45,7 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
 <div id="daily" style="display:none"></div>
 <div id="shop" style="display:none"></div>
 <div id="card"><div id="cardI"></div><div id="cardT"></div><div id="cardD"></div><button id="cardB">Понятно ▶</button></div>
-<div id="start" style="overflow-y:auto"><h1>ПУТЕШЕСТВЕННИК</h1><div>Путешествие по зимней России: от Петербурга до Якутии.<br>Как играть — покажу по ходу.</div><div id="diffs" style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center"></div><button id="go">▶ ИГРАТЬ</button><button id="cont" style="display:none;font:800 18px monospace;padding:10px 24px;border:0;border-radius:12px;background:#29adff;color:#1d2b53"></button><div style="font-size:13px;color:#c2c3c7">Горизонтально — видно больше улицы</div></div>
+<div id="start" style="overflow-y:auto"><h1>БЕГУ ЗА БУЛКОЙ</h1><div>Путешествие по зимней России: от Петербурга до Якутии.<br>Как играть — покажу по ходу.</div><div id="diffs" style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center"></div><button id="go">▶ ИГРАТЬ</button><button id="cont" style="display:none;font:800 18px monospace;padding:10px 24px;border:0;border-radius:12px;background:#29adff;color:#1d2b53"></button><div style="font-size:13px;color:#c2c3c7">Горизонтально — видно больше улицы</div></div>
 <div class="btn" id="bl" style="font-size:16px">СТОП</div><div class="btn" id="bj">ПРЫГ</div>
 <script>window.GAME_PLATFORM='vk';</script><script>
 // самая ранняя ловушка ошибок: покажет текст даже если основной скрипт не запустился
@@ -500,7 +500,7 @@ function showPostcard(code){
   if(have) h+='<button id="pcShare" style="font:800 16px system-ui;padding:8px 22px;border:0;border-radius:10px;background:#29adff;color:#1d2b53">📤 Поделиться открыткой</button>';
   h+='<button id="pcBack" style="font:800 16px system-ui;padding:8px 22px;border:0;border-radius:10px;background:rgba(255,241,232,.15);color:#fff1e8">← В паспорт</button>';
   el.innerHTML=h; el.style.display='flex'; el.scrollTop=0;
-  const ps=document.getElementById('pcShare'); if(ps) ps.onclick=e=>{ e.stopPropagation(); shareImage(kind==='c' ? 'Я побывал в городе '+CITY_NAMES[id]+' в игре «Путешествие»! А ты?' : 'Я прошёл маршрут «'+ROUTES[id].n+'» в игре «Путешествие»!', renderPostcard(kind,id), 'otkrytka.png'); };
+  const ps=document.getElementById('pcShare'); if(ps) ps.onclick=e=>{ e.stopPropagation(); shareImage(kind==='c' ? 'Я побывал в городе '+CITY_NAMES[id]+' в игре «Бегу за булкой»! А ты?' : 'Я прошёл маршрут «'+ROUTES[id].n+'» в игре «Бегу за булкой»!', renderPostcard(kind,id), 'otkrytka.png'); };
   document.getElementById('pcBack').onclick=e=>{ e.stopPropagation(); showPassport(); };
 }
 const pBtn=document.createElement('button'); pBtn.id='passBtn';
@@ -621,11 +621,11 @@ document.body.appendChild(exitBtn);
 exitBtn.addEventListener('pointerdown', e=>{ e.stopPropagation(); exitBtn.style.display='none'; MODE=''; toMenu(); });
 // --- 2. Поделиться ---
 function shareImage(text, dataUrl, fname){
-  try{ if(navigator.share && navigator.canShare){ fetch(dataUrl).then(r=>r.blob()).then(b=>{ const f=new File([b], fname||'puteshestvie.png', {type:'image/png'});
+  try{ if(navigator.share && navigator.canShare){ fetch(dataUrl).then(r=>r.blob()).then(b=>{ const f=new File([b], fname||'begu-za-bulkoy.png', {type:'image/png'});
       if(navigator.canShare({files:[f]})) navigator.share({files:[f], text}).catch(()=>{}); else navigator.share({text}).catch(()=>{}); }); return; } }catch(e){}
   if(YA.platform==='vk' && AD.br){ AD.br.send('VKWebAppShowWallPostBox',{message:text}).catch(()=>{}); return; }
   if(YA.platform==='tg' && window.Telegram && Telegram.WebApp){ try{ Telegram.WebApp.openTelegramLink('https://t.me/share/url?url='+encodeURIComponent(location.href)+'&text='+encodeURIComponent(text)); }catch(e){} return; }
-  try{ const a=document.createElement('a'); a.href=dataUrl; a.download=fname||'puteshestvie.png'; document.body.appendChild(a); a.click(); a.remove(); navigator.clipboard && navigator.clipboard.writeText(text+' '+location.href); showBanner('Картинка сохранена, текст скопирован'); }catch(e){}
+  try{ const a=document.createElement('a'); a.href=dataUrl; a.download=fname||'begu-za-bulkoy.png'; document.body.appendChild(a); a.click(); a.remove(); navigator.clipboard && navigator.clipboard.writeText(text+' '+location.href); showBanner('Картинка сохранена, текст скопирован'); }catch(e){}
 }
 const titleBox=document.getElementById('start');
 const wkBtn=document.createElement('button'); wkBtn.style.cssText='font:800 16px system-ui,sans-serif;padding:9px 18px;border:0;border-radius:10px;background:#ffec27;color:#1d2b53';
@@ -749,7 +749,7 @@ document.getElementById('go').replaceWith(document.getElementById('go').cloneNod
   goB.addEventListener('click', e=>{ e.stopPropagation(); snd(440,440,0.01); showMap(); }); }
 contEl.style.display='none'; contEl.remove();
 document.addEventListener('pointerdown', e=>{ if(state==='over' && e.target && e.target.id==='vkTop'){ e.stopPropagation(); YA.leaderboard(best); return; }
-  if(state==='over' && e.target && (e.target.id==='adCont'||e.target.id==='adDbl'||e.target.id==='shareRun')){ e.stopPropagation(); if(e.target.id==='shareRun'){ shareImage('Я пробежал '+Math.floor(pl.x/10)+' м в игре «Путешествие»! Попробуй обогнать!', cv.toDataURL('image/png'), 'rekord.png'); return; } if(e.target.id==='adCont') adContinue(); else adDouble(); return; }
+  if(state==='over' && e.target && (e.target.id==='adCont'||e.target.id==='adDbl'||e.target.id==='shareRun')){ e.stopPropagation(); if(e.target.id==='shareRun'){ shareImage('Я пробежал '+Math.floor(pl.x/10)+' м в игре «Бегу за булкой»! Попробуй обогнать!', cv.toDataURL('image/png'), 'rekord.png'); return; } if(e.target.id==='adCont') adContinue(); else adDouble(); return; }
   if(state==='over' && overT>30){ if(e.target && e.target.id==='fromStart'){ if(roofMode) toMenu(); else newGame(1); } else retry(); } });
 
 // ===== Звук (8-бит, WebAudio) =====
