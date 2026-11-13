@@ -62,12 +62,12 @@ const CFG = {
   airMin: 1.6,       // минимальная скорость в прыжке
   frostRate: 0.045,   // как быстро растёт мороз в Сургуте (100 = замёрз), ~37 секунд
   bearRide: 300,     // сколько кадров катаешься на медведе (5 секунд)
-  speed1: 1.15,      // 1-й уровень — чуть медленнее, чтобы освоиться
-  speed0: 1.3,       // скорость на 1-м уровне, px/кадр
+  speed1: 1.25,      // 1-й уровень — чуть медленнее, чтобы освоиться
+  speed0: 1.45,       // скорость на 1-м уровне, px/кадр
   speedStep: 0.1,    // прибавка за уровень внутри города
   citySpeedStep: 0.08, // каждый следующий город стартует чуть быстрее
-  speedMax: 2.6,
-  levelLen: 900,     // длина уровня, px
+  speedMax: 2.9,
+  levelLen: 1300,     // длина уровня, px
   brake: 0.45,       // доля скорости при торможении
   gravity: 0.28,
   jumpVel: -4.6,     // ~37 px высота при полном нажатии
@@ -2131,7 +2131,7 @@ function generate(){
     const sp0 = baseSpeed(), air = 2*-CFG.jumpVel/CFG.gravity;
     const sp = sp0 * (blizAt(nextX,150) ? BLIZ_SLOW : 1); // у входа в метель считаем по медленной скорости
     const minGap = sp*air + 30;
-    const extra = Math.max(30, 150 - level*14);
+    const extra = Math.max(20, 110 - level*12);
     const iceChance = (WARM(cityOfL(level-1)) ? 0 : weekMod('ice') ? 0.85 : Math.min(0.55, 0.25 + level*0.05)) * ((cityOfL(level-1)===0 || level===1) ? 1 : 0.35);
     if(MODE==='zen'){ const r0=Math.random(); if(r0<0.5) obs.push({t:'item',k:'bulka',x:nextX,y:GROUND-14}); else if(r0<0.65) obs.push({t:'item',k:'token',x:nextX,y:GROUND-18}); else if(r0<0.75 && seasonActive()) obs.push({t:'item',k:'toy',x:nextX,y:GROUND-18}); nextX += Math.round(rnd(70,130)); continue; }
     const st0 = bridgeAt(nextX); if(st0 && isStation(st0.L)){ nextX = st0.b0 + BR_LEN + 20; continue; }
@@ -2150,7 +2150,7 @@ function generate(){
       obs.push({t:'robot', x:rx, stuck:true, st:'stuck', vx:0, hint:null});
       firstStuck=false;
       nextX = rx + 20 + sp0*BLIZ_SLOW*air + 40 + rnd(10,40);
-    } else if(cityOfL(level-1)===0 && (level-1)%CITY_LEN===CITY_LEN-1 && Math.random()<0.3 && !alleyAt(nextX) && !blizAt(nextX,200) && !slushAt(nextX,200) && !bridgeAt(nextX) && !bridgeAt(nextX+150)){
+    } else if(level>=2 && Math.random()<(cityOfL(level-1)===0 ? 0.5 : 0.45) && !lmAt(Math.floor((nextX+60)/112)) && !plotByBridge(Math.floor((nextX+60)/112)) && !WARM(-1) && !alleyAt(nextX) && !blizAt(nextX,200) && !bridgeAt(nextX) && !bridgeAt(nextX+150)){
       obs.push({t:'granny', x:nextX+60, st:'wait', k:0, trig: sp0*(40+38)+12});
       nextX += 60 + minGap + 60 + rnd(0,extra);
     } else if(level>=3 && Math.random()<({1:0.4,21:0.3}[cityOfL(level-1)]||0) && !alleyAt(nextX) && !blizAt(nextX,200) && !slushAt(nextX,200) && !bridgeAt(nextX) && !bridgeAt(nextX+120)){
@@ -2932,6 +2932,26 @@ function drawRepPit(x,w){ const o={w};
       for(const bx of [x-16, x+o.w+4]){ for(let k=0;k<12;k+=4){ R(bx,GROUND-16+k*1,12,3,(k/4)%2?C.w:C.red); for(let m=0;m<12;m+=4) R(bx+m+((k/4)%2?2:0),GROUND-16+k,2,3,(k/4)%2?C.red:C.w); } R(bx+1,GROUND-16,1,16,C.dg); R(bx+10,GROUND-16,1,16,C.dg); }
       const px=x+o.w+14; for(let k=0;k<4;k++) R(px,GROUND-3-k*3,12,3,k%2?'#d0d0d4':'#b9b9be'); R(px,GROUND-15,12,1,C.dg); // стопка новой плитки
 }
+// Пейзаж в просвете между домами — у каждого города свой
+function drawNature(x, c, i){
+  const W='#ffffff', S=C.w, sn=!WARM(c);
+  const MT={2:'#7d8b9a',3:'#6f8f7a',4:'#8a93a8',9:'#7a9a84',10:'#6f8a7a',11:'#7f8ea0',12:'#8090a8',13:'#7a8f9a',14:'#6f8fa0',15:'#5f6b80',5:'#8aa08a',8:'#8aa08a',6:'#7a9a84',7:'#7a9a84',17:'#7a9a84',18:'#6f9a8a',19:'#5f8f7a',20:'#6f8f7a',21:'#7d8b9a',16:'#8a93a8'}[c]||'#7d8b9a';
+  const sea=[14,18,19,11].includes(c), lake=[12,10].includes(c), volc=c===15, flare=c===3, ural=c===2;
+  const ph=(i*37)%100;
+  // дальние горы / сопки
+  for(let k=0;k<112;k+=2){ const wx=i*112+k; let h = volc ? Math.max(0,96-Math.abs(k-56)*1.4) : 50+22*Math.sin(wx/37+ph)+12*Math.sin(wx/13);
+    if(c===4) h=60+30*Math.abs(Math.sin(wx/29)); // Якутия: скалистые Ленские столбы
+    h=Math.round(h); R(x+k,GROUND-h-10,2,h,MT); if(sn) R(x+k,GROUND-h-10,2,Math.min(6,h),S); }
+  if(volc){ R(x+50,GROUND-110,12,4,'#5f6b80'); const f=(frame>>3)%3; R(x+52,GROUND-118-f*3,8,6,'#c2c3c7'); R(x+56,GROUND-126-f*4,6,6,'#d9dadf'); }
+  if(sea||lake){ R(x,GROUND-34,112,26,lake&&sn?'#cfe6f7':C.blu); for(let k=0;k<112;k+=14) R(x+k+((frame>>3)%14),GROUND-28+(k%3)*6,6,1,lake&&sn?'#a9c8e0':W); }
+  if(flare){ R(x+80,GROUND-70,3,60,C.dg); const f=(frame>>2)%3; R(x+77,GROUND-80-f,9,10+f,C.org); R(x+79,GROUND-84-f,5,6,C.yel); }
+  if(c===4){ for(const t of [16,60,96]){ R(x+t,GROUND-40,2,30,C.brn); for(let r=0;r<3;r++) R(x+t-3+r,GROUND-44+r*8,8-r*2,6,'#4e6b3a'); } } // лиственницы
+  else if(!sea){ for(const t of [10,38,74,100]){ const h=26+((t+i)%3)*6; if(WARM(c)){ R(x+t,GROUND-h,3,h-6,C.brn); R(x+t-8,GROUND-h-4,19,4,'#3a8a4e'); R(x+t-5,GROUND-h-7,13,3,'#3a8a4e'); } // пальмы
+      else { R(x+t+3,GROUND-14,2,8,C.brn); for(let r=0;r<4;r++) R(x+t-r,GROUND-h+r*6,6+r*2,6,'#2e5a3c'); R(x+t,GROUND-h,6,2,S); } } }
+  if(c===11 && (frame>>4)%2){ R(x+10,GROUND-120,90,3,'rgba(0,228,54,.35)'); R(x+20,GROUND-114,70,2,'rgba(41,173,255,.3)'); } // северное сияние
+  if(ural){ R(x+50,GROUND-40,3,30,C.k); R(x+44,GROUND-44,15,4,C.k); g.fillStyle=C.w; } // столб «Европа–Азия»
+  R(x,GROUND-8,112,8, sn ? S : '#e8d9a8'); R(x,GROUND-14,112,1,C.k); for(let k=0;k<112;k+=6) R(x+k,GROUND-14,1,6,C.k); // ограда
+}
 function drawSquare(x){ // сквер у моста: заснеженные деревья, ограда, скамейка
   R(x,GROUND-6,112,6,C.w);
   for(const tx of [18,70]){ R(x+tx,GROUND-34,3,30,C.brn); R(x+tx-10,GROUND-46,23,14,'#2e5a3c'); R(x+tx-7,GROUND-54,17,9,'#2e5a3c'); R(x+tx-9,GROUND-47,19,2,C.w); R(x+tx-6,GROUND-55,15,2,C.w); }
@@ -2959,6 +2979,9 @@ const LM_KEYS = {0:['isaac','kazan','strelka','petropavl'], 1:['bolshoi','zaryad
 function lmAt(i){ const L=Math.floor((i*112+56)/CFG.levelLen); if(L<0 || isHighwayL(L)) return null; const c=cityOfL(L), lv=((L%CITY_LEN)+CITY_LEN)%CITY_LEN;
   if(c===20 && lv===2) return {key:'luka', k:0, x0:i*112};
   if(c===0 && L===1 && GRIB===6) return null; // после Львиного моста — дома канала Грибоедова, в том числе дом 105
+  const rel=i*112-L*CFG.levelLen; // просветы между домами: видно горы, тайгу, море — пейзаж этого города
+  if(c!==0 && c!==1 && rel>660 && rel<960 && ((i*7+L*3)%3===0)) return {key:'nature', k:0, x0:i*112, c};
+  if(c!==0 && c!==1 && !(LM_KEYS[c]&&LM_KEYS[c][lv]) && rel>300 && rel<620 && ((i*5+L)%4===1)) return {key:'nature', k:0, x0:i*112, c};
   const ks=LM_KEYS[c]; if(!ks || !ks[lv]) return null; const p0=Math.floor((L*CFG.levelLen+280)/112), k=i-p0;
   return (k>=0 && k<3) ? {key:ks[lv], k, x0:p0*112} : null; }
 function bldSpan(i){
@@ -2995,7 +3018,7 @@ function drawBuildings(){
     const ii=((i%5)+5)%5;
     if(noRoof(i*112+56) && noRoof(i*112)) continue; // трасса: домов нет
     if(plotByBridge(i) && !WARM(cityOf(i*112+56))){ drawSquare(i*112-cam); continue; }
-    { const lm=lmAt(i); if(lm && lm.key==='luka'){ drawLuka(i*112-cam); continue; } if(lm){ g.save(); g.beginPath(); g.rect(i*112-cam,-60,112,H+60); g.clip();
+    { const lm=lmAt(i); if(lm && lm.key==='luka'){ drawLuka(i*112-cam); continue; } if(lm && lm.key==='nature'){ drawNature(i*112-cam, lm.c, i); continue; } if(lm){ g.save(); g.beginPath(); g.rect(i*112-cam,-60,112,H+60); g.clip();
       const sc={isaac:0.58,city:0.4,kazan:0.8,strelka:0.9,petropavl:0.52,bolshoi:0.8,zaryadye:0.72,redsq:0.6}[lm.key]||1, lx=lm.x0-cam;
       if(sc<1 && lm.key!=='isaac' && lm.key!=='city'){ R(lx,GROUND-6,336,6,C.w); for(const t of [14,300]){ R(lx+t+5,GROUND-30,3,26,C.brn); R(lx+t-4,GROUND-44,21,16,'#2e5a3c'); R(lx+t-3,GROUND-45,19,2,C.w); } }
       g.translate(lx+168*(1-sc), GROUND*(1-sc)); g.scale(sc,sc); drawLandmark(lm.key, 0); g.restore(); continue; } } // у моста — сквер, а не обрезанный дом
@@ -3883,7 +3906,7 @@ function setUI(id,html){ if(UIc[id]!==html){ UIc[id]=html; document.getElementBy
 function updateUI(){
   if(state==='title'){ ['hudL','hudC','hudR','ban','msg'].forEach(i=>setUI(i,'')); document.getElementById('over').style.display='none'; return; }
   const m=Math.floor(Math.max(0,pl.x)/10);
-  setUI('hudL', m+' м<br><span style="color:#ffa300">'+(cityOf(pl.x)===4?'🐟':'🥖')+' '+runBulki+'</span><br><span style="color:#ff004d">'+(lives===Infinity ? '♥ ∞' : '♥'.repeat(Math.max(0,lives)))+'</span>'+(pl.shield>0?' <span style="color:#ffa300">+квас</span>':'')+(COLD(cityOf(pl.x)) && !roofMode?'<br><span style="color:'+(frost>70?'#ff004d':'#29adff')+'">🥶 '+Math.round(frost)+'%</span>':''));
+  setUI('hudL', m+' м<br><span style="color:#ffa300">'+(cityOf(pl.x)===4?'🐟':'🥖')+' '+totalBulki+(runBulki?' <span style="font-size:.7em;color:#00e436">+'+runBulki+'</span>':'')+'</span><br><span style="color:#ff004d">'+(lives===Infinity ? '♥ ∞' : '♥'.repeat(Math.max(0,lives)))+'</span>'+(pl.shield>0?' <span style="color:#ffa300">+квас</span>':'')+(COLD(cityOf(pl.x)) && !roofMode?'<br><span style="color:'+(frost>70?'#ff004d':'#29adff')+'">🥶 '+Math.round(frost)+'%</span>':''));
   setUI('hudC', roofMode ? (bonusKind==='summer' ? '☀️ Белые ночи' : bonusKind==='boss' ? '🚜 СТОП: '+'🔴'.repeat(Math.max(0,B.hp)) : bonusKind==='boss2' ? '🤖 '+'⚡'.repeat(Math.max(0,RB.hp)) : bonusKind==='boss3' ? '🐻 '+'🪤'.repeat(Math.max(0,MB.hp)) : bonusKind==='boss4' ? '🥶 '+Math.round(FB.fm)+'% · 🔥 '+FB.lit+'/3' : bonusKind==='sled' ? '🛷 ⭐ '+SL.score : bonusKind==='boss5' ? '🦀 '+'🌊'.repeat(Math.max(0,CB.hp)) : bonusKind==='mars' ? '🚀 Марс · 🧪 '+MS.score : bonusKind==='gull' ? '🐦 '+'🧢'.repeat(Math.max(0,GB.hp)) : '🏠 Крыши') : 'Ур. '+level);
   setUI('hudR','★ '+best);
   const bo = document.getElementById('ban');
